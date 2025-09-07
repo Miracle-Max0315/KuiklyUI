@@ -1,0 +1,40 @@
+# KuiklyUI 项目核心摘要 (llms.txt)
+
+## 1. 项目概览
+
+- **名称**: KuiklyUI
+- **简介**: 一个基于 Kotlin Multiplatform (KMP) 的声明式、高性能、全平台的 UI 框架。
+- **目标**: 一套代码，多端运行（Android, iOS, HarmonyOS, Web, 小程序），同时保持原生性能和体验。
+- **出品方**: 腾讯
+
+## 2. 核心技术
+
+- **语言**: Kotlin
+- **框架**: Kotlin Multiplatform (KMP)
+- **UI 范式**: 
+    1.  自研的响应式和声明式 DSL。
+    2.  基于 Jetpack Compose 修改和适配的 Compose DSL（包名：`com.tencent.kuikly.compose`）。
+- **架构**: 共享的核心逻辑 (`core` 模块) + 平台原生的渲染层 (`core-render-*` 模块)。
+
+## 3. 主要模块划分
+
+- `core`: 平台无关的核心逻辑，包括 UI 响应式、布局算法、通信桥等。
+- `compose`: 基于 Compose 修改的跨平台 UI 组件和布局逻辑。
+- `core-render-android`: Android 平台的渲染实现。
+- `core-render-ios`: iOS 平台的渲染实现。
+- `core-render-ohos`: 鸿蒙平台的渲染实现。
+- `core-render-web`: Web (H5) 和小程序平台的渲染实现。
+- `core-annotations` / `core-ksp`: 用于代码生成的注解及注解处理器。
+- `demo`: 官方示例代码。
+- `*App` (e.g., `androidApp`, `iosApp`): 各平台的宿主（Host）工程，用于运行和调试。
+
+## 4. 构建系统
+
+- **工具**: Gradle
+- **特点**: 支持多个 Kotlin 版本。通过特定的 gradle 配置文件（如 `build.1.9.22.gradle.kts`）和打包脚本（如 `1.9.22_test_publish.sh`）来管理不同版本下的构建。
+
+## 5. 关键信息
+
+- **跨平台能力**: 通过 KMP 的 `commonMain`, `androidMain`, `iosMain` 等 source sets 实现平台代码共享与隔离。
+- **渲染机制**: 在 `core` 模块中完成布局计算，然后通过 Bridge 将渲染指令传递给各个平台的原生渲染器执行，从而确保性能。
+- **动态化**: 支持将业务逻辑和 UI 动态下发。

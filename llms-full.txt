@@ -1,0 +1,98 @@
+# KuiklyUI 项目完整技术文档 (llms-full.txt)
+
+## 1. 项目概述
+
+### 1.1 项目简介
+`Kuikly` 是一个由腾讯公司前端 Oteam 推出的，基于 Kotlin Multiplatform (KMP) 的UI和逻辑一体化全平台解决方案。
+
+### 1.2 项目目标
+旨在提供一个`代码统一、极致易用、动态灵活的高性能全平台开发框架`。核心理念是“一套代码，五端运行”，同时保证接近原生的性能和开发体验。
+
+### 1.3 支持平台
+- [X] Android
+- [X] iOS
+- [X] HarmonyOS
+- [X] Web (Beta)
+- [X] 小程序 (Beta)
+
+### 1.4 关键特性
+- **跨平台一致性**: 基于 Kotlin 实现，确保多端逻辑和表现一致。
+- **原生性能**: 编译生成平台原生二进制产物（Android .aar, iOS .framework, HarmonyOS .so），UI由原生渲染层驱动。
+- **原生开发体验**: 开发者使用 Kotlin 作为主要语言，享受原生工具链支持。
+- **轻量级**: SDK 体积小（AOT模式下，Android 约 300KB, iOS 约 1.2MB）。
+- **动态化能力**: 支持编译为动态化产物，实现UI和逻辑的动态更新。
+- **多编程范式**: 同时支持自研的声明式与响应式编程 DSL，以及一个深度适配和修改过的 Compose DSL。
+
+## 2. 技术架构
+
+Kuikly 采用典型的“共享核心 + 平台适配”分层架构。
+
+1.  **核心层 (`core`, `compose`)**: 这一层是平台无关的，使用 Common Kotlin 编写。它包含了框架的核心能力，如：
+    *   两种可选的 UI 描述 DSL（自研 DSL 和 Compose DSL）。
+    *   UI 状态管理和响应式系统。
+    *   通用的布局算法。
+    *   与平台层通信的 Bridge 机制。
+
+2.  **平台渲染层 (`core-render-*`)**: 这一层是平台相关的，负责将核心层计算出的布局信息和渲染指令，翻译成对应平台的原生 UI 组件进行渲染。
+    *   `core-render-android`: 使用 Android View 系统进行渲染。
+    *   `core-render-ios`: 使用 UIKit 进行渲染。
+    *   `core-render-ohos`: 使用 ArkUI 进行渲染。
+    *   `core-render-web`: 翻译成 DOM (H5) 或 WXML/WXSS (小程序)。
+
+3.  **注解处理层 (`core-annotations`, `core-ksp`)**: 通过 KSP (Kotlin Symbol Processing) 技术，在编译期扫描注解（如 `@Page`），自动生成平台入口代码和组件注册代码，简化开发流程。
+
+4.  **应用层 (`*App`, `demo`)**: 提供各平台的宿主App空壳和使用示例，方便开发者快速上手和调试。
+
+## 3. 模块详解
+
+```
+.
+├── core                    # 核心模块：实现响应式UI、布局算法、Bridge通信等跨平台能力。
+│  ├── src
+│  ├──	commonMain            # 各平台共享的通用代码
+│  ├── androidMain           # Android 平台实现 (输出 aar)
+│  ├── jvmMain               # 通用 JVM 平台代码 (不含Android API, 输出 jar)
+│  ├── iosMain               # iOS 平台实现 (输出 framework)
+│  ├── ohosArm64Main         # 鸿蒙平台实现 (输出 so)
+│  └── jsMain                # H5 和小程序平台实现 (输出 js)
+├── core-render-android    # Android 平台渲染器模块
+├── core-render-ios        # iOS 平台渲染器模块
+├── core-render-ohos       # 鸿蒙平台渲染模块
+├── core-render-web        # H5 和小程序平台渲染模块
+├── core-annotations       # 注解模块, 定义@Page等业务注解
+├── core-ksp               # 注解处理模块, 生成Core入口文件
+├── buildSrc               # Gradle 构建脚本，负责编译、打包、分包逻辑
+├── demo                   # DSL 示例代码
+├── androidApp             # Android 宿主空壳工程
+├── iosApp                 # iOS 宿主空壳工程
+├── ohosApp                # 鸿蒙宿主空壳工程
+├── miniApp                # 小程序宿主空壳工程
+├── h5App                  # H5 宿主空壳工程
+└── compose                # Compose UI 实现模块：包含UI、布局、与Kuikly桥接等跨平台能力。
+    ├── src
+    ├── commonMain      # 共享的跨平台代码，包括Compose UI组件、布局和事件处理
+    ├── androidMain     # Android 平台特定实现
+    ├── nativeMain      # iOS 和鸿蒙平台的特定实现
+    └── jsMain          # H5 和小程序平台的特定实现
+```
+
+**特别说明**: `compose` 模块是基于 Jetpack Compose 1.7.3 版本的源码进行修改和适配的。为了支持 Kuikly 框架的渲染需求并保持未来升级的便利性，包名已从 `androidx.compose` 修改为 `com.tencent.kuikly.compose`。
+
+## 4. 构建系统
+
+项目使用 Gradle 进行构建，并对多 Kotlin 版本提供了良好的支持。
+
+- **版本管理**: 根目录下存在多个针对不同 Kotlin 版本的 `build.x.x.xx.gradle.kts` 和 `settings.x.x.xx.gradle.kts` 配置文件。默认使用 Kotlin 2.0.21。
+- **构建脚本**: 根目录下的 `x.x.xx_test_publish.sh` 脚本用于构建对应 Kotlin 版本的本地依赖产物。
+- **环境要求**:
+    - 不同 Kotlin 版本可能需要不同的 JDK 版本（例如 Kotlin 1.3.10/1.4.20 需要 JDK 11，而新版需要 JDK 17）。
+    - 移动端开发需要配置对应的 IDE (Android Studio, Xcode, DevEco Studio)。
+
+## 5. 开发与贡献
+
+- **快速开始**: 新手开发者可以参考官方文档，首先配置好环境，然后分别在 Android Studio, Xcode, DevEco Studio 中运行对应的 `*App` 工程来启动 Demo。
+- **代码规范**: (此部分可由 AI 根据代码库分析推断，或由团队补充)
+    - 遵循标准的 Kotlin 编码规范。
+    - 使用 KDoc 为 public API 添加文档。
+    - 提交代码前运行 `./gradlew build` 确保项目可被正常构建。
+- **贡献**: 欢迎通过提交 Issue 或 Pull Request 的方式为项目做出贡献。贡献前请阅读 `CONTRIBUTING.md` 文件。
