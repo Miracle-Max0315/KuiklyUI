@@ -27,7 +27,7 @@
 - `core-annotations` / `core-ksp`: 用于代码生成的注解及注解处理器。
 - `demo`: 官方示例代码。
 - `*App` (e.g., `androidApp`, `iosApp`): 各平台的宿主（Host）工程，用于运行和调试。
-- 'Kuikly开发文档,包含vue与kuikly转换规则'
+
 ## 4. 构建系统
 
 - **工具**: Gradle
